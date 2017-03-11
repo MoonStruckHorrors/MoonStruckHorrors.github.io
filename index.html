@@ -1,138 +1,34 @@
-<!DOCTYPE HTML>
-<html>
-	<head>
-		<title>Nikhil Vyas</title>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-		<meta name="description" content="" />
-		<meta name="keywords" content="" />
-		<link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400" rel="stylesheet" />
-		<script src="js/jquery.min.js"></script>
-		<script src="js/config.js"></script>
-		<script src="js/skel.min.js"></script>
-		<noscript>
-			<link rel="stylesheet" href="css/skel-noscript.css" />
-			<link rel="stylesheet" href="css/style.css" />
-			<link rel="stylesheet" href="css/style-desktop.css" />
-			<link rel="stylesheet" href="css/noscript.css" />
-		</noscript>
-		<!--[if lte IE 8]><script src="js/html5shiv.js"></script><link rel="stylesheet" href="css/ie8.css" /><![endif]-->
-		<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.css" rel="stylesheet">
-	</head>
-	<body class="homepage">
+---
+layout: default
+---
 
-		<!-- Wrapper-->
-			<div id="wrapper">
-				
-				<!-- Nav -->
-					<nav id="nav">
-						<a href="#me" class="icon icon-home active"><span>Home</span></a>
-						<a href="#about" class="icon icon-user"><span>About</span></a>
-						<a href="#work" class="icon icon-folder-close"><span>Projects</span></a>
-						<a href="#contact" class="icon icon-envelope-alt"><span>Contact</span></a>
-					</nav>
+{% include header.html %}
 
-				<!-- Main -->
-					<div id="main">
-						
-						<!-- Me -->
-							<article id="me" class="panel">
-								<header>
-									<h1>Nikhil Vyas</h1>
-									<span class="byline">Programmer</span>
-								</header>
-								<a href="#work" class="jumplink pic">
-									<!--<span class="jumplink arrow icon icon-chevron-right"><span>See my work</span></span>-->
-									<img src="images/me.jpg" alt="" />
-								</a>
-							</article>
-							
-							<article id="about" class="panel">
-								<header>
-									<h1>About</h1>
-								</header>
-								
-								<p>Nikhil Vyas is a Programmer who is pursuing his Masters in CS from BITS Pilani K K Birla Goa Campus. Currently he's working as an intern at MathWorks India. As you must have figured by now, he likes writing about himself in Third Person.<br/>
-								He likes programming in C/C++, C#, Java & Python; among other languages. He's interested in "everything programming" in general. <br/>
-								In his free time, he likes playing Flight Simulators, Strategy & First Person Shooter video games. 
-								He also likes to listen to Ambient/Post-Rock/Alternative Rock or anything that comes up on his <strike>Last.fm</strike>(RIP), <strike>Grooveshark</strike>(RIP), local library on shuffle or Spotify(running through VPN).<br/>
-								Sometimes he plays Table Tennis or Cricket; both of which he is bad at. <br/><br/>
-								
-								<b>About the website: </b>This is a slightly modified template <a href="http://html5up.net/astral/" target="_blank">Astral</a> from <a href="http://html5up.net/" target="_blank">HTML5 UP!</a> by <a href="http://twitter.com/n33co" target="_blank">aj</a>.
-								</p>
-							</article>
+<div class="portfolio">
+    <h1>Contact:</h1>
+        <br/>
+        <p>
+        {% for websites in site.data.websites %}
+            <a href="{{ websites.url }}">{{ websites.name }}</a> ||
+        {% endfor %}
+            <a href="mailto:nikhilvyas07@gmail.com">E-Mail</a>
+        </p>
+    <br/> <br/>
+    <h1>I code. My adventures so far:</h1>
+    <br/>
+    <p> <a href="/Resume_NikhilVyas.pdf">Résumé</a> </p>
+</div>
 
-						<!-- Work --> 
-							<article id="work" class="panel">
-								<header>
-								<h2>Projects</h2>
-								<p>Various applications and utility scripts. Most of them are available on my github.</p>
-								
-								</header>
-								<h3>Area based Opportunistic Routing <i>(C++)</i></h3>
-								<p>An Energy Efficient Routing protocol for mobile wireless sensor networks. Did extensive literature survey and simulations for optimization. Simulations done in Castalia / OMNeT++</p>
-								<h3>Cardboard Based Navigation <i>(Android)</i></h3>
-								<p>Developed an Augmented Reality Android application(Proof-of-concept) for basic navigation via visual notifications.</a>.</p>
-								
-								<h3>War Thunder - Easy Dev Mode <i>(C#)</i></h3>
-								<p>Creates a backup of the installation directory with dev mode configuration for <a href="http://warthunder.com" target="_blank">War Thunder</a>.</p>
-								
-								<h3>Gunslinger <i>(Unity / C#)</i></h3>
-								<p>Developed a 2D side­scrolling adventure game in Unity with emphasis on level destruction and bullet trajectories.</p>
-								
-								<h3>Bandcamp Downloader <i>(C#)</i></h3>
-								<p>Downloads the preview tracks from <a href="http://bandcamp.com" target="_blank">Bandcamp.</a></p>
-								
-								<h3>Wakoopa CSV Parser <i>(Python)</i></h3>
-								<p>Provides generation of human-readable data from the CSV file provided by the application usage tracking website <a href="http://social.wakoopa.com/" target="_blank">Wakoopa</a> at the time of shutting down.</p>
-								
-								<h3>OriginKill <i>(PowerShell)</i></h3>
-								<p>Script to kill EA’s <a href="https://www.origin.com/">Origin</a> client whenever no game is being played to avoid resource hog/annoyance created by the initial/beta versions of the Origin Client.</p>
-								
-								<h3>RTU Result Fetcher & Analyzer <i>(Shell + Java, Shell + Python, C#)</i></h3>
-								<p>This was developed for the college to automate the process of result analysis by directly fetching the result from the university's website & generating thorough analysis.
-								<br/> Note: Does not work anymore. The university added human verification measures.</p>
-
-								<h3>Steam Achievements <i>(Java)</i></h3>
-								<p>Application for viewing any user’s achievements for any game on <a href="http://store.steampowered.com">Steam.</a></p>
-								
-								<h3>Last.fm Stat Generator <i>(Java)</i></h3>
-								<p>Listening statistics generation for <a href="http://last.fm" target="_blank">Last.fm</a> using <a href="http://code.google.com/p/lastfm-java/">Last.fm bindings for Java.</a></p>
-
-								<h3>Tic Tac Toe /AI <i>(C++, C)</i></h3>
-								<p>Tic Tac Toe with probability based AI with different difficulty modes. Mentioning because it was my first actual C/C++ "project". Yay Nikhil, right?</p>
-								
-								<h3>Personal Information Manager <i>(C#)</i></h3>
-								<p>Windows Application to manage data like Contacts, Notes, Reminders, Birthdays. Pretty basic.</p>
-
-
-							</article>
-							
-							<article id="contact" class="panel">
-								<a href="http://facebook.com/nikhilvyas" target="blank"><img src="images/facebook.png" alt="Facebook" title="Facebook" width="50" height="50"/></a>
-								&nbsp;&nbsp;&nbsp;&nbsp;
-								<a href="http://last.fm/user/Nikhil_07n" target="blank"><img src="images/lastfm.png" alt="Last.fm" title="Last.fm" width="50" height="50"/></a>
-								&nbsp;&nbsp;&nbsp;&nbsp;
-								<a href="http://steamcommunity.com/id/MoonStruckHorrors" target="blank"><img src="images/steam.png" alt="Steam" title="Steam" width="50" height="50"/></a>
-								&nbsp;&nbsp;&nbsp;&nbsp;
-								<a href="http://twitter.com/MoonStruckH" target="blank"><img src="images/twitter.png" alt="Twitter" title="Twitter" width="50" height="50"/></a>
-								&nbsp;&nbsp;&nbsp;&nbsp;
-								<a href="http://in.linkedin.com/in/nikhilvyas07" target="blank"><img src="images/linkedin.png" alt="LinkedIn" title="LinkedIn" width="50" height="50"/></a>
-								&nbsp;&nbsp;&nbsp;&nbsp;
-								<a href="https://github.com/MoonStruckHorrors" target="blank"><img src="images/github.png" alt="Github" title="Github" width="50" height="50"/></a>
-								<br/><br/>
-								<img src="images/email.jpg"/>
-							</article>							
-
-					</div>
-		
-				<!-- Footer -->
-					<div id="footer">
-						<ul class="links">
-							<li>&copy; Nikhil Vyas</li>
-						</ul>
-					</div>
-		
-			</div>
-
-	</body>
-</html>
+<!--
+When I have a proper design in mind, this would get uncommented.
+<div class="blog">
+    <h1>Blog Posts:</h1>
+    <ul>
+        {% for post in site.posts %}
+        <li>
+            <span class="date">{{ post.date | date: '%Y %b %d' }}</span> - <a href="{{ post.url }}">{{ post.title }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+-->
