@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Angry Rabbit's Blog</title>
+    <description>Well..</description>
+    <link>http://localhost:4000/</link>
+    <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Wed, 26 Sep 2018 22:43:25 +0530</pubDate>
+    <lastBuildDate>Wed, 26 Sep 2018 22:43:25 +0530</lastBuildDate>
+    <generator>Jekyll v3.3.1</generator>
+    
+      <item>
+        <title>Fix for jumbled / incorrect / glitchy E-mail HTML in Python</title>
+        <description>&lt;p&gt;So I have this script I wrote at work which sends out E-mails for some internal defect stats.&lt;/p&gt;
+
+&lt;h1 id=&quot;the-issue&quot;&gt;The Issue&lt;/h1&gt;
+
+&lt;p&gt;For a long time, every few days the HTML would sporadically be jumbled up - strings jumping from once place to another.&lt;/p&gt;
+
+&lt;p&gt;Most of the times it would be a missing &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;td&amp;gt;&lt;/code&gt; in a &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;tr&amp;gt;&lt;/code&gt; - which would surprisingly reappear somewhere before the table.&lt;/p&gt;
+
+&lt;p&gt;The E-mail part of the script was something like this.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Create the MIMEMultipart()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MIMEMultipart&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'From'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;from_&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'To'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;to_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Subject'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subject&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Cc'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cc_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Add some text to it&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MIMEText&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;txt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'us-ascii'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;attach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# == Attach files ==&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# == Attach images ==&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Create a SMTP object and send the MIMEMultipart over it&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;connection&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SMTP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;someserver.domain.com&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;connection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;It looks something like this in action.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/GfcUDFw.png&quot; alt=&quot;issue&quot; /&gt;
+(That A belongs to the fourth column. Yes, it’s pixelated. That’s why I added an arrow)&lt;/p&gt;
+
+&lt;h1 id=&quot;investigation&quot;&gt;Investigation&lt;/h1&gt;
+
+&lt;p&gt;At first, I thought there was something wrong with my HTML generating logic. Since the issue happened randomly, I persisted the HTML which was being sent out. When it finally happened again, I looked at the HTML and it was proper.
+But atleast I had the HTML which would consistently reproduce this behavior.&lt;/p&gt;
+
+&lt;p&gt;Googled a lot with no luck. Tried a lot of permutations: &lt;code class=&quot;highlighter-rouge&quot;&gt;python smtp html issue/bug&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;python mime html formatting issue/bug&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;python mimemultipart mimetext issue/bug&lt;/code&gt;. And many, many more. 😅&lt;/p&gt;
+
+&lt;h1 id=&quot;the-fix&quot;&gt;The Fix&lt;/h1&gt;
+
+&lt;p&gt;Newlines! I realized my HTML lacked &lt;code class=&quot;highlighter-rouge&quot;&gt;\n&lt;/code&gt;s. It was rendering properly in a browser, but in the E-mail client (tried with Outlook on Mac/Windows) it would come jumbled up.&lt;/p&gt;
+
+&lt;p&gt;Just adding line breaks to the HTML seems to fix this issue. I’m not really sure why would this happen, but if anyone knows - let me know. 🙂&lt;/p&gt;
+</description>
+        <pubDate>Mon, 24 Sep 2018 18:30:00 +0530</pubDate>
+        <link>http://localhost:4000/python/2018/09/24/python-email-html-jumbled.html</link>
+        <guid isPermaLink="true">http://localhost:4000/python/2018/09/24/python-email-html-jumbled.html</guid>
+        
+        <category>python</category>
+        
+        <category>mime</category>
+        
+        <category>programming</category>
+        
+        <category>coding</category>
+        
+        <category>email</category>
+        
+        <category>mail</category>
+        
+        <category>html</category>
+        
+        <category>table</category>
+        
+        
+        <category>python</category>
+        
+      </item>
+    
+      <item>
+        <title>Skipping unwanted responses in pexpect</title>
+        <description>&lt;p&gt;Was recently automating some Server CLI stuff and came across this weird issue. Where I was getting blanks whenever I tried to get some response back from the Terminal session.&lt;/p&gt;
+
+&lt;p&gt;Spent a day figuring out why I was getting blank responses.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# process: pexpect spawn object&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# prompt: terminal prompt; eg: '&amp;gt;', '~'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'set SOME_VAR=1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# We don't need the empty response of this command&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'echo cake'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Returns a response, but we don't need it; sorry cake&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ls'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Say we need the response of this one&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pexpect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TIMEOUT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pexpect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;EOF&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Searches the first occurance of prompt&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;resp_b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;before&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# This would return the response upto the first prompt, not the ls response&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;This is because of the way pexpect works with the terminal response buffer. To get around this, you should match every &lt;code class=&quot;highlighter-rouge&quot;&gt;sendline&lt;/code&gt; with a call to &lt;code class=&quot;highlighter-rouge&quot;&gt;expect&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Or, we can do it in a single line. Since expect works with regex, we can simple jump to the end of the terminal response so far.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Use something other than fstring if you're not on Python 3.6&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'{prompt}$'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Searches the last occurance of prompt (Prompt followed by end of string)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# OR&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'{prompt} $'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# The prompts usually have a trailing space&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Wrapped up in a neat function.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_and_clear_full_response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# Search for prompt[SPACE][END_OF_STRING]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'{0} $'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pexpect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TIMEOUT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pexpect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;EOF&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# Return the full response buffer since the last expect&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;before&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Fixed code:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'set SOME_VAR=1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# We don't need the empty response of this command&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'echo cake'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Returns a response, but we don't need it; sorry cake&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_and_clear_full_response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Let's clear everything&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ls'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Say we need the response of this one&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;resp_b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;before&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# This would return the output of ls&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Simple, eh? Could become annoying if you start suspecting the server / CLI for not displaying a response.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 19 Sep 2018 18:30:00 +0530</pubDate>
+        <link>http://localhost:4000/python/2018/09/19/skipping-unwanted-responses-in-pexpect.html</link>
+        <guid isPermaLink="true">http://localhost:4000/python/2018/09/19/skipping-unwanted-responses-in-pexpect.html</guid>
+        
+        <category>python</category>
+        
+        <category>pexpect</category>
+        
+        <category>expect</category>
+        
+        <category>automation</category>
+        
+        <category>CLI</category>
+        
+        
+        <category>python</category>
+        
+      </item>
+    
+      <item>
+        <title>Simple way to epoch</title>
+        <description>&lt;p&gt;Came across this question recently:
+&lt;a href=&quot;https://stackoverflow.com/questions/51760021/convert-a-column-of-yyyy-mm-dd-datetimes-to-linux-time-epoch-in-python/51760200&quot;&gt;stackoverflow: Convert a column of yyyy-mm-dd datetimes to linux time epoch in Python&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Which referenced this question: &lt;a href=&quot;https://stackoverflow.com/questions/35630098/convert-a-column-of-datetimes-to-epoch-in-python&quot;&gt;stackoverflow: Convert a column of datetimes to epoch in Python&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The accepted answer(s) suggests to find the diff between the date with the epoch reference date and calculate the seconds.&lt;/p&gt;
+
+&lt;p&gt;Well, we can… do this. There’s a reason we’re using the &lt;code class=&quot;highlighter-rouge&quot;&gt;datetime&lt;/code&gt; objects and not writing our own classes for datetime.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;datetime&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;dt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;{dt.timestamp()}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Just use &lt;code class=&quot;highlighter-rouge&quot;&gt;.timestamp()&lt;/code&gt; on your &lt;code class=&quot;highlighter-rouge&quot;&gt;datetime&lt;/code&gt; object, people. That’s it.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;import this&lt;/code&gt; -&amp;gt; Rule:3 -&amp;gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;Simple is better than complex.&lt;/code&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sat, 25 Aug 2018 18:30:00 +0530</pubDate>
+        <link>http://localhost:4000/python/2018/08/25/python-epoch.html</link>
+        <guid isPermaLink="true">http://localhost:4000/python/2018/08/25/python-epoch.html</guid>
+        
+        <category>python</category>
+        
+        <category>epoch</category>
+        
+        <category>stackoverflow</category>
+        
+        <category>datetime</category>
+        
+        
+        <category>python</category>
+        
+      </item>
+    
+  </channel>
+</rss>

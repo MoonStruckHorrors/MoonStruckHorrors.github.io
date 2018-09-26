@@ -1,24 +1,56 @@
-# My variables
-name: Nikhil Vyas
-description: Software Engineer
+title: Angry Rabbit's Blog
+description: Well..
+author: Nikhil Vyas
+github: https://github.com/MoonStruckHorrors
+about: Developer, Gamer. Python, C++, Rimworld
+disqus_shortname: nikhilvyas
 google_analytics: UA-77268794-1
-google_verification: null
+avatar_url: /static/img/avatar.jpg
 
+enableTags: true
+tagarray: []
 
-# File management
-include: [".htaccess"]
-exclude: ["README.md", "LICENSE"]
+collections:
+  project:
+    output: true
+    permalink: /project/:path/
 
+social:
+    - icon: fa-facebook
+      link: "https://facebook.com/nikhilvyas"
+    - icon: fa-twitter
+      link: "https://twitter.com/MoonStruckH"
+    - icon: fa-linkedin
+      link: "https://www.linkedin.com/in/nikhilvyas07"
+    - icon: fa-github
+      link: "https://github.com/MoonStruckHorrors"
+    - icon: fa-steam
+      link: "https://steamcommunity.com/id/MoonStruckHorrors"
+    - icon: fa-lastfm
+      link: "https://www.last.fm/user/Nikhil_07n"
+    - icon: fa-500px
+      link: "https://500px.com/nikhilvyas07"
 
-# Sass
-sass:
-  style: :compressed
-  sass_dir: _sass
+share:
+  twitter_username: MoonStruckH
 
+urls:
+    - text: About Me
+      url: /about/
+    - text: Résumé
+      url: /Resume_NikhilVyas.pdf
 
-# Markdown
+url: "https://nikhilvyas.com"
+baseurl: ""
+paginate: 10
+per_page: 10
+paginate_path: "/page/:num/"
 markdown: kramdown
-kramdown:
-  input: GFM
-  hard_wrap: false
-highlighter: rouge
+gems:
+  - jekyll-paginate
+  - jekyll-gist
+
+compress_html:
+  clippings: all
+  comments: ["<!-- ", " -->"]
+  endings: all
