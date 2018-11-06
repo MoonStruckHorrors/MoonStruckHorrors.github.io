@@ -5,9 +5,102 @@
     <description>Well..</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 26 Sep 2018 22:43:25 +0530</pubDate>
-    <lastBuildDate>Wed, 26 Sep 2018 22:43:25 +0530</lastBuildDate>
+    <pubDate>Mon, 22 Oct 2018 14:02:55 +0530</pubDate>
+    <lastBuildDate>Mon, 22 Oct 2018 14:02:55 +0530</lastBuildDate>
     <generator>Jekyll v3.3.1</generator>
+    
+      <item>
+        <title>Audio out of sync - Windows 10</title>
+        <description>&lt;p&gt;I’ve been living with this issue for more than an year now (probably more). In streaming videos (YouTube, Netflix, etc) the audio would progressively become out of sync with the video. With some quick observations I determined that it takes roughly 5-7 minutes for the video to lag 1s behind the audio. So that’s&lt;/p&gt;
+
+&lt;p&gt;I usually boot up Windows just for games so this isn’t really that big of a deal. However, it is &lt;em&gt;really&lt;/em&gt; annoying!&lt;/p&gt;
+
+&lt;p&gt;My standard response cycle for this issue is this:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Encounter the issue.&lt;/li&gt;
+  &lt;li&gt;Google&lt;/li&gt;
+  &lt;li&gt;Try the first non-visited solution.&lt;/li&gt;
+  &lt;li&gt;Try to watch a lengthy video.&lt;/li&gt;
+  &lt;li&gt;Issue happens.&lt;/li&gt;
+  &lt;li&gt;Restart and boot into Linux.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Now, most of the times the first solutions were related to Realtek audio settings. Some were about the infamous Windows Power saving configuration. Heck, there was one about “Try using a wired headphone”. &lt;a href=&quot;https://helgeklein.com/blog/2017/03/streamed-video-audio-sync-problems-windows-10-realtek-sound/&quot;&gt;Stuff like this&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Trying a solution which doesn’t work only adds to the frustration when you realize that after 10 minutes into a video. Well, maybe these are variations of the issue - but I surely wasn’t facing these.&lt;/p&gt;
+
+&lt;p&gt;Now, what could possibly cause the video to lag behind the audio? It’s obviously not the GPU - which is capable of pushing 144 frames at 1080p.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 27 Sep 2018 22:30:00 +0530</pubDate>
+        <link>http://localhost:4000/technology/misc/2018/09/27/windows-10-audio-out-of-sync.html</link>
+        <guid isPermaLink="true">http://localhost:4000/technology/misc/2018/09/27/windows-10-audio-out-of-sync.html</guid>
+        
+        <category>Windows10</category>
+        
+        <category>Windows</category>
+        
+        <category>Microsoft</category>
+        
+        <category>Audio</category>
+        
+        <category>Video</category>
+        
+        <category>Web</category>
+        
+        <category>Sync</category>
+        
+        <category>Lag</category>
+        
+        <category>MSIAfterburner</category>
+        
+        <category>MSI</category>
+        
+        <category>AfterBurner</category>
+        
+        
+        <category>technology</category>
+        
+        <category>misc</category>
+        
+      </item>
+    
+      <item>
+        <title>[fanFiction] One less Volatile - The story of Sabit</title>
+        <description>&lt;p&gt;“It Burns!” screamed &lt;a href=&quot;http://dyinglight.wikia.com/wiki/Sabit&quot;&gt;Sabit&lt;/a&gt;. He had been in the sun since 11 in the morning - almost two hours. The cave was partially lit, most of the light coming from the narrow opening on the top. Rest from the underwater algae which grew in the far corners of the cave. At night, it would look brilliant, almost magical if not for piles of human flesh and bones his new cavemates kept bringing.&lt;/p&gt;
+
+&lt;p&gt;Although, it was starting to grow on him. The stench which made him nauseous when he first saw the sticky piles of stale human meat - was starting to make him hungry now. Same with the sunlight - not too long ago he would’ve given anything for a bit of sunlight. Although he had no issues at all venturing out alone in the night as well. Now the sunlight just burned his skin, emitting orange fumes. He still remembered this was caused due to the UV radiation or &lt;em&gt;something&lt;/em&gt; - he wasn’t a scientist.&lt;/p&gt;
+
+&lt;p&gt;He was, however, a botanist. Well, atleast since the outbreak. See, in times when even surviving is a big achievement - anyone who can distinguish a Toxic Lichen from generic herbs is considered a renowned botanist / herbalist. On top of that, he was the only person around who had the knack for tracking the vital yellowroot herb. Before the outbreak, you could’ve done a reverse image search to find the actual name, appearance and properties of this particular plant. But now, if it’s yellow and matches the shape - it’s good enough for everyone.&lt;/p&gt;
+
+&lt;p&gt;As with most of his memories, he was beginning to forget the appearance of the herbs as well. He did remember Jasir and the folks on his farm; and how overjoyed they became when he went to deliver the herbs every week. Or how they asked him to stay with them, on the farm. But he wanted to be close to The Sanctuary down south, in proximity of The Children of the Sun. Even if that meant staying in a makeshift hut.&lt;/p&gt;
+
+&lt;p&gt;From the first look, that hut would look like a deathwish to any outsider. Back on the farm they have barbed wire all over the perimeter and bright UV lamps that are visible from almost half a mile. The poor hut didn’t even have a basic trap to stop the biters. But Sabit wasn’t really that naive. He chose the location for a reason - height and terrain. It was really a decent sized hillock in middle of a river with steep cliffs - unsurmountable without proper climbing equipment - even by the fast climbing &lt;a href=&quot;http://dyinglight.wikia.com/wiki/Viral&quot;&gt;Virals&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;When he first saw the spot, it seemed too perfect. A steep climb with fertile land on top, in middle of a river during zombie apocalypse? Even residents of the Towers would envy this location. And perfect it was. Well except for the fact that the hill was .. hollow.&lt;/p&gt;
+
+&lt;p&gt;It was a late realization for Sabit. It took almost 6 months for him to finally realise that ground below the hut had collapsed - opening up the entrance to the newly revealed cave network that spanned across majority of the hillock; And another few days for that fatal misstep which led him to his current.. state.&lt;/p&gt;
+
+&lt;p&gt;His skin had faded away, giving way to the exposed flesh and bones. He knew he was going to be stuck in the red gooey, fleshy mess until his body inevitably took its new form. He knew what was coming. And he wanted no part in the madness which had taken over the city. He saw what these things, which he was going to become - &lt;a href=&quot;http://dyinglight.wikia.com/wiki/Volatile&quot;&gt;Volaties&lt;/a&gt; - were capable of. The cure, the immunity - all a fantasy.&lt;/p&gt;
+
+&lt;p&gt;“End this!” he screamed again. He would’ve thanked Kyle - for taking the yellow herbs for the farm - if speaking more than two words was feasible. And a visibly distraught and sad Kyle did it. One less Volatile.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 26 Sep 2018 22:30:00 +0530</pubDate>
+        <link>http://localhost:4000/gaming/misc/2018/09/26/the-story-of-sabit.html</link>
+        <guid isPermaLink="true">http://localhost:4000/gaming/misc/2018/09/26/the-story-of-sabit.html</guid>
+        
+        <category>dyinglight</category>
+        
+        <category>thefollowing</category>
+        
+        <category>sabit</category>
+        
+        
+        <category>gaming</category>
+        
+        <category>misc</category>
+        
+      </item>
     
       <item>
         <title>Fix for jumbled / incorrect / glitchy E-mail HTML in Python</title>
