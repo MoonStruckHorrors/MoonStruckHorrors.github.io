@@ -5,9 +5,254 @@
     <description>Well..</description>
     <link>http://0.0.0.0:4000/</link>
     <atom:link href="http://0.0.0.0:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 11 Dec 2018 17:18:20 +0000</pubDate>
-    <lastBuildDate>Tue, 11 Dec 2018 17:18:20 +0000</lastBuildDate>
+    <pubDate>Sat, 23 Mar 2019 07:41:30 +0000</pubDate>
+    <lastBuildDate>Sat, 23 Mar 2019 07:41:30 +0000</lastBuildDate>
     <generator>Jekyll v3.7.3</generator>
+    
+      <item>
+        <title>Maven - Bundle local JAR dependency within the target JAR</title>
+        <description>&lt;p&gt;Say you have two projects - &lt;code class=&quot;highlighter-rouge&quot;&gt;ProjectX&lt;/code&gt; - which depends on &lt;code class=&quot;highlighter-rouge&quot;&gt;ProjectY&lt;/code&gt; which is a local JAR. &lt;code class=&quot;highlighter-rouge&quot;&gt;ProjectY&lt;/code&gt; is added as a dependency to &lt;code class=&quot;highlighter-rouge&quot;&gt;ProjectX&lt;/code&gt; like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.wow.projecty&lt;span class=&quot;nt&quot;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;projecty&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0&lt;span class=&quot;nt&quot;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;system&lt;span class=&quot;nt&quot;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;systemPath&amp;gt;&lt;/span&gt;/Users/somepath/ProjectY.jar&lt;span class=&quot;nt&quot;&gt;&amp;lt;/systemPath&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now if you want a self-sufficient JAR with all the dependencies bundled, you’d probably use the &lt;code class=&quot;highlighter-rouge&quot;&gt;maven-assembly-plugin&lt;/code&gt; like this&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-assembly-plugin&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;descriptorRefs&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;descriptorRef&amp;gt;&lt;/span&gt;jar-with-dependencies&lt;span class=&quot;nt&quot;&gt;&amp;lt;/descriptorRef&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/descriptorRefs&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;archive&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;manifest&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;nt&quot;&gt;&amp;lt;addClasspath&amp;gt;&lt;/span&gt;true&lt;span class=&quot;nt&quot;&gt;&amp;lt;/addClasspath&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;nt&quot;&gt;&amp;lt;mainClass&amp;gt;&lt;/span&gt;ProjectXDriver&lt;span class=&quot;nt&quot;&gt;&amp;lt;/mainClass&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;/manifest&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/archive&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;id&amp;gt;&lt;/span&gt;make-assembly&lt;span class=&quot;nt&quot;&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;package&lt;span class=&quot;nt&quot;&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;nt&quot;&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;single&lt;span class=&quot;nt&quot;&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This would bundle all the dependencies, except the ones with a system scope - your local JARs.&lt;/p&gt;
+
+&lt;p&gt;To work around this issue, just install the JAR in the local maven repository and use it normally (without  system scope / systemPath).&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mvn install:install-file -Dfile=ProjectY.jar -DpomFile=../pom.xml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;em&gt;(Based on my unanswered question on StackOverflow)&lt;/em&gt; 😅&lt;/p&gt;
+</description>
+        <pubDate>Wed, 20 Mar 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/technology/others/2019/03/20/maven-bundle-local-dependency.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/technology/others/2019/03/20/maven-bundle-local-dependency.html</guid>
+        
+        <category>java</category>
+        
+        <category>maven</category>
+        
+        <category>dependency</category>
+        
+        <category>jar</category>
+        
+        <category>local</category>
+        
+        <category>system</category>
+        
+        <category>scope</category>
+        
+        
+        <category>technology</category>
+        
+        <category>others</category>
+        
+      </item>
+    
+      <item>
+        <title>[Short] GoPro Hero 7 - Battery Drain issue</title>
+        <description>&lt;h2 id=&quot;issue&quot;&gt;Issue:&lt;/h2&gt;
+
+&lt;p&gt;GoPro Hero 7’s battery drains overnight while it is switched off. (Brand new device, less than 3 days old)&lt;/p&gt;
+
+&lt;h2 id=&quot;fixes-i-found-on-the-internet&quot;&gt;Fixes I found on the Internet:&lt;/h2&gt;
+
+&lt;h3 id=&quot;rollback-firmware-updates&quot;&gt;Rollback firmware updates&lt;/h3&gt;
+&lt;p&gt;Since I updated the firmware the first time I booted up the device, this was the first thing I tried. Left it powered off for roughly 6 hours and the battery reached zero.&lt;/p&gt;
+
+&lt;h3 id=&quot;remove-the-memory-card-before-switching-off&quot;&gt;Remove the memory card before switching off&lt;/h3&gt;
+&lt;p&gt;This was a weird one, but since I wanted it fixed without going through the replacement / RMA procedure, I gave it a shot. After all, you never know what kind of coding brainfarts are embedded. Didn’t work.&lt;/p&gt;
+
+&lt;h1 id=&quot;fix-that-worked-for-me&quot;&gt;Fix that worked for me&lt;/h1&gt;
+&lt;p&gt;Turn off the Wireless connectivity. 
+From the pull down menu, go to &lt;code class=&quot;highlighter-rouge&quot;&gt;Preferences &amp;gt; Connections &amp;gt; Wireless Connections &amp;gt; Off&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;After leaving it powered off overnight and seeing no battery drain, decided to stress test it. Stress testing in this case means leaving it powered off for &lt;em&gt;days&lt;/em&gt;. Left it powered off for a week - minimal battery drain!&lt;/p&gt;
+</description>
+        <pubDate>Fri, 15 Mar 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/technology/others/2019/03/15/gopro-hero7-battery-drain.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/technology/others/2019/03/15/gopro-hero7-battery-drain.html</guid>
+        
+        <category>gopro</category>
+        
+        <category>hero7</category>
+        
+        <category>hero</category>
+        
+        <category>goprohero7</category>
+        
+        <category>battery</category>
+        
+        <category>drain</category>
+        
+        <category>charge</category>
+        
+        
+        <category>technology</category>
+        
+        <category>others</category>
+        
+      </item>
+    
+      <item>
+        <title>[Short] Dockerfile - COPY: no such file or directory</title>
+        <description>&lt;h2 id=&quot;issue&quot;&gt;Issue&lt;/h2&gt;
+&lt;p&gt;Getting the error &lt;code class=&quot;highlighter-rouge&quot;&gt;COPY: no such file or directory&lt;/code&gt; when you run a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; for a &lt;code class=&quot;highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt; with a &lt;code class=&quot;highlighter-rouge&quot;&gt;COPY&lt;/code&gt; command like this - &lt;code class=&quot;highlighter-rouge&quot;&gt;COPY /Users/nikhil/somefile.jar /somefolderonimage/&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;fix&quot;&gt;Fix&lt;/h2&gt;
+&lt;p&gt;Docker doesn’t know about any file except the ones in &lt;code class=&quot;highlighter-rouge&quot;&gt;$(pwd)&lt;/code&gt;. It just denies its existence because of some weird design decision. Copy the files to be bundled with the image into the current working directory(Where you’re running the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; from). And then use something like this - &lt;code class=&quot;highlighter-rouge&quot;&gt;COPY somefile.jar /somefolderonimage/&lt;/code&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 27 Feb 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/technology/others/2019/02/27/dockerfile-copy-no-such-file-or-directory.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/technology/others/2019/02/27/dockerfile-copy-no-such-file-or-directory.html</guid>
+        
+        <category>docker</category>
+        
+        <category>Dockerfile</category>
+        
+        <category>COPY</category>
+        
+        <category>false</category>
+        
+        <category>such</category>
+        
+        <category>file</category>
+        
+        <category>or</category>
+        
+        <category>directory</category>
+        
+        
+        <category>technology</category>
+        
+        <category>others</category>
+        
+      </item>
+    
+      <item>
+        <title>IComparer issues with Array.Sort() in C# (Unity)</title>
+        <description>&lt;p&gt;Came across this seemingly weird issue while trying to sort an Array of &lt;code class=&quot;highlighter-rouge&quot;&gt;Vector2&lt;/code&gt;s based on their X coordinates.&lt;/p&gt;
+
+&lt;p&gt;Wrote a quick Class extending &lt;code class=&quot;highlighter-rouge&quot;&gt;IComparer&amp;lt;Vector3&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Vector2DXPosComparer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IComparer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+     &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Compare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+         &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+             &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+         &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+             &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And then just tried an &lt;code class=&quot;highlighter-rouge&quot;&gt;Array.Sort()&lt;/code&gt; with this &lt;code class=&quot;highlighter-rouge&quot;&gt;IComparer&lt;/code&gt;. Something like this.&lt;/p&gt;
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Sort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector2DXPosComparer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outStr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;++)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;outStr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ToString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Debug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outStr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The output was an unchanged, unsorted array - same as the original. Tried the exact thing with a regular C# project. Surprisingly it worked!
+So the problem was definitely specific to Unity’s &lt;code class=&quot;highlighter-rouge&quot;&gt;Array.Sort&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Based on an answer from Unity Answers - this happens because the equality is not handled in the code.&lt;/p&gt;
+
+&lt;p&gt;In my previous IComparer code, the equality is clubbed in the else block. Even after getting the answer, took me a while to realize why exactly this is an issue. (Hint: Quick Sort)&lt;/p&gt;
+
+&lt;p&gt;Fix? Add one &lt;code class=&quot;highlighter-rouge&quot;&gt;=&lt;/code&gt;. Or just use &lt;code class=&quot;highlighter-rouge&quot;&gt;CompareTo&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Compare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//OR just return v1.x.CompareTo(v2.x)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Time spent debugging: One Day. SMH.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 19 Nov 2018 13:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/c%23/unity/2018/11/19/csharp-IComparer-sort-issues.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/c%23/unity/2018/11/19/csharp-IComparer-sort-issues.html</guid>
+        
+        <category>C#</category>
+        
+        <category>Unity</category>
+        
+        <category>Scripting</category>
+        
+        <category>IComparer</category>
+        
+        <category>Vector</category>
+        
+        <category>Vector2</category>
+        
+        <category>Vector3</category>
+        
+        
+        <category>C#</category>
+        
+        <category>Unity</category>
+        
+      </item>
     
       <item>
         <title>Audio out of sync - Windows 10</title>

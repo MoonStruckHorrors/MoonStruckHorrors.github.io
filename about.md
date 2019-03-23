@@ -6,9 +6,9 @@ permalink: /about/
 
 I like coding, gaming, photography. That’s pretty much it.
 
-Current obsession: Python, RimWorld
+Current obsession: Python, Java, Docker
 
-Software Engineer II - Cisco
+Software Engineer III - Cisco
 
 Former Intern: MathWorks
 
@@ -21,3 +21,7 @@ Former Student: St. Anne’s, Jodhpur
 Since you’ve visited this page, have a complimentary Résumé.
 
 [Résumé](https://nikhilvyas.com/Resume_NikhilVyas.pdf)
+
+---------
+
+*[Jekyll theme this site is based on](https://github.com/agusmakmun/agusmakmun.github.io)*

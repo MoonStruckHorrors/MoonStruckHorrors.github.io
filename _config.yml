@@ -18,10 +18,10 @@ collections:
 social:
     - icon: fa-facebook
       link: "https://facebook.com/nikhilvyas"
-    - icon: fa-twitter
-      link: "https://twitter.com/MoonStruckH"
     - icon: fa-linkedin
       link: "https://www.linkedin.com/in/nikhilvyas07"
+    - icon: fa-instagram
+      link: https://www.instagram.com/nikhilvyas182/
     - icon: fa-github
       link: "https://github.com/MoonStruckHorrors"
     - icon: fa-steam
@@ -30,6 +30,8 @@ social:
       link: "https://www.last.fm/user/Nikhil_07n"
     - icon: fa-500px
       link: "https://500px.com/nikhilvyas07"
+    - icon: fa-twitter
+      link: "https://twitter.com/MoonStruckH"
 
 share:
   twitter_username: MoonStruckH
