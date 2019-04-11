@@ -5,17 +5,52 @@
     <description>Nikhil Vyas - Software Engineer, Software Developer</description>
     <link>http://0.0.0.0:4000/</link>
     <atom:link href="http://0.0.0.0:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 03 Apr 2019 06:27:58 +0000</pubDate>
-    <lastBuildDate>Wed, 03 Apr 2019 06:27:58 +0000</lastBuildDate>
+    <pubDate>Thu, 11 Apr 2019 16:58:11 +0000</pubDate>
+    <lastBuildDate>Thu, 11 Apr 2019 16:58:11 +0000</lastBuildDate>
     <generator>Jekyll v3.7.3</generator>
     
       <item>
         <title>Docker API - Check if the image has been updated in Docker Registry (DockerHub / Private Registry)</title>
-        <description>
+        <description>&lt;p&gt;Easy way to check for base image updates for a running container. Works for DockerHub and Private DTR.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;DTR&lt;/code&gt; host - &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dockertrustedregistry/&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dockerd&lt;/code&gt; host - &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dockerdhost/&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;gettting-the-imageid-of-running-containers&quot;&gt;Gettting the ImageID of running containers&lt;/h3&gt;
+
+&lt;p&gt;First order of business is to get the Image name / Image ID. For this, send a GET request to the endpoint &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dockerdhost/containers/json&lt;/code&gt; to get a list of containers in JSON format. We’re looking for the keys &lt;code class=&quot;highlighter-rouge&quot;&gt;Image&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;ImageID&lt;/code&gt;. We’ll use these to query the registry API for updates.&lt;/p&gt;
+
+&lt;h3 id=&quot;getting-the-digest-of-these-images-from-the-registry&quot;&gt;Getting the digest of these Images from the registry&lt;/h3&gt;
+
+&lt;p&gt;Next, for these &lt;code class=&quot;highlighter-rouge&quot;&gt;Image&lt;/code&gt;s send a GET to the registy API. The only catch here is the requirement for a certain header, without which we won’t get the latest digest. This one:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'Accept':'application/vnd.docker.distribution.manifest.v2+json'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With this header, send a GET to &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dockertrustedregistry/v2/&amp;lt;Image_Name&amp;gt;/manifests/latest&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;Image_Name&amp;gt;&lt;/code&gt; here is just the name of the image WITHOUT the Registry prefix. For instance, if your image is &lt;code class=&quot;highlighter-rouge&quot;&gt;dockertrustedregistry/someimagename&lt;/code&gt;, just use &lt;code class=&quot;highlighter-rouge&quot;&gt;someimagename&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Handy function to do this (not fully tested):&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;short_image_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pos_slash&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pos_colon&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;:&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pos_slash&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pos_colon&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;pos_colon&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pos_slash&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pos_colon&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In the JSON response, we’re looking for the value of &lt;code class=&quot;highlighter-rouge&quot;&gt;digest&lt;/code&gt; under &lt;code class=&quot;highlighter-rouge&quot;&gt;config&lt;/code&gt;. Something like &lt;code class=&quot;highlighter-rouge&quot;&gt;resp.json()[&quot;config&quot;][&quot;digest&quot;]&lt;/code&gt; (If you’re not getting this, recheck the header)&lt;/p&gt;
+
+&lt;p&gt;Compare this value with the &lt;code class=&quot;highlighter-rouge&quot;&gt;ImageID&lt;/code&gt;. If they’re different, the Image has been updated.&lt;/p&gt;
+
+&lt;p&gt;Fin&lt;/p&gt;
 </description>
-        <pubDate>Wed, 20 Mar 2019 11:00:00 +0000</pubDate>
-        <link>http://0.0.0.0:4000/docker/others/2019/03/20/docker-api-check-image-update.html</link>
-        <guid isPermaLink="true">http://0.0.0.0:4000/docker/others/2019/03/20/docker-api-check-image-update.html</guid>
+        <pubDate>Wed, 10 Apr 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/docker/others/2019/04/10/docker-api-check-image-update.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/docker/others/2019/04/10/docker-api-check-image-update.html</guid>
         
         <category>docker</category>
         
