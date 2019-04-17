@@ -5,9 +5,96 @@
     <description>Nikhil Vyas - Software Engineer, Software Developer</description>
     <link>http://0.0.0.0:4000/</link>
     <atom:link href="http://0.0.0.0:4000/sitemap.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 11 Apr 2019 16:58:11 +0000</pubDate>
-    <lastBuildDate>Thu, 11 Apr 2019 16:58:11 +0000</lastBuildDate>
+    <pubDate>Wed, 17 Apr 2019 17:40:22 +0000</pubDate>
+    <lastBuildDate>Wed, 17 Apr 2019 17:40:22 +0000</lastBuildDate>
     <generator>Jekyll v3.7.3</generator>
+    
+      <item>
+        <title>Coverity - Out-of-bounds Read (CWE-125) - Interesting oversight</title>
+        <description>&lt;p&gt;CWE-125: Out-of-bounds Read – &lt;a href=&quot;https://cwe.mitre.org/data/definitions/125.html&quot;&gt;https://cwe.mitre.org/data/definitions/125.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Error message:&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Out-of-bounds read (OVERRUN)
+5. overrun-local: Overrunning array someArray of 655 4-byte elements at element index 658 (byte offset 2632) using index idxForSomeArray (which evaluates to 658).
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The issue itself is pretty straightforward; trying to read an out-of-bounds / invalid index. Was pretty sure about this being a false positive initially.&lt;/p&gt;
+
+&lt;p&gt;The code looks something like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;someArray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* === A long list of array elements here === */&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* vvv newly added code vvv*/&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;a&quot;&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//wow that's a,
+&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&quot;b&quot;&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//orly b,
+&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&quot;c&quot;&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//definitely c,
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// We usually keep adding stuff to the array and updating the size here
+&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;someArraySize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This array is used like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;someArraySize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* Read using i - started causing SA Violation when reaching the newly added elements after adding new elements to the array */&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;For instance, in the above snippet, if we try to access &lt;code class=&quot;highlighter-rouge&quot;&gt;someArray[2]&lt;/code&gt; - it results in this warning during compilation.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;array index 2 is past the end of the array (which contains 1 element) [-Warray-bounds]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;But we have three elements, right? Wrong, we have just one element &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;abc&quot;&lt;/code&gt;, not three elements. Apparently, if we miss the commas in the curly bracket initialization syntax for char* arrays, C++ decides to concatenate the string literals. Have to find the proper documentation for this behavior, but that’s how it is.&lt;/p&gt;
+
+&lt;p&gt;This code works just fine:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;someArray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* === A long list of array elements here === */&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* vvv newly added code vvv*/&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//wow that's a,
+&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&quot;b&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//orly b,
+&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&quot;c&quot;&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//definitely c,
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Minor but interesting issue. Good fun for around 15 minutes.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 17 Apr 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/c++/technology/2019/04/17/out-of-bounds-read-coverity.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/c++/technology/2019/04/17/out-of-bounds-read-coverity.html</guid>
+        
+        <category>c++</category>
+        
+        <category>cpp</category>
+        
+        <category>c</category>
+        
+        <category>static-analysis</category>
+        
+        <category>static</category>
+        
+        <category>analysis</category>
+        
+        <category>coverity</category>
+        
+        <category>synopsys</category>
+        
+        <category>code</category>
+        
+        <category>programming</category>
+        
+        <category>coding</category>
+        
+        <category>violation</category>
+        
+        
+        <category>c++</category>
+        
+        <category>technology</category>
+        
+      </item>
     
       <item>
         <title>Docker API - Check if the image has been updated in Docker Registry (DockerHub / Private Registry)</title>
