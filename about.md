@@ -6,12 +6,6 @@ permalink: /about/
 
 I'm Nikhil. I like coding, gaming, photography, bikes, sometimes traveling, sometimes traveling on a bike. Always looking for the next interesting problem to solve. That’s pretty much it.
 
-Email - [my_first_name][my_last_name]07 at gmail dot com
-
-Social Media / Contact links on the left sidebar (top if you're on mobile)
-
-Current obsession: Python, Java, Docker, React
-
 70% back-end, 20% front-end, 10% procrastination
 
 Software Engineer III - Cisco
