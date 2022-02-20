@@ -4,19 +4,23 @@ title: About
 permalink: /about/
 ---
 
-I'm Nikhil. I like coding, gaming, photography, bikes, sometimes traveling, sometimes traveling on a bike. Always looking for the next interesting problem to solve. That’s pretty much it.
+I'm Nikhil. I like coding, [gaming](https://steamcommunity.com/id/MoonStruckHorrors), [photography](https://500px.com/nikhilvyas07), bikes, sometimes traveling, sometimes traveling on a bike. Always looking for the next interesting problem to solve.
 
 70% back-end, 20% front-end, 10% procrastination
 
-Software Engineer III - Cisco
+Current: SMTS at Oracle Cloud Infrastructure (OCI)
 
-Former Intern: MathWorks
+Former:
 
-Former Student: BITS Pilani, Goa Campus
-
-Former Student: JIET, Jodhpur
-
-Former Student: St. Anne’s, Jodhpur
+- Software Engineer IV - Cisco
+    
+- Intern: MathWorks
+    
+- Student: BITS Pilani, Goa Campus
+    
+- Student: JIET, Jodhpur
+    
+- Student: St. Anne’s, Jodhpur
 
 Since you’ve visited this page, have a complimentary Résumé.
 
