@@ -24,7 +24,7 @@ Former:
 
 Since you’ve visited this page, have a complimentary Résumé.
 
-[Résumé](https://nikhilvyas.com/Resume_NikhilVyas.pdf)
+[Résumé](/Resume_NikhilVyas.pdf)
 
 ---------
 
