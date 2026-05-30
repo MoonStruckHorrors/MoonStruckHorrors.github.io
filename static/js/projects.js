@@ -1,41 +1,39 @@
-(function($){
-	$(document).ready(function(){
-		$(document).on('click','.tag-filter',function(){
-			var $this = $(this);
-			
-			$('span.tag-filter').removeClass("active");
-			$this.addClass("active");
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    document.addEventListener('click', function(e){
+      var filter = e.target.closest('.tag-filter');
+      if (!filter) return;
 
+      var filterTag = filter.dataset.tag;
 
-			$('.tag-group').children().each(function(){
-				if( $(this).data('tag') ==  $this.data('tag')){
-					$(this).addClass("active");
-				}
-			});
+      document.querySelectorAll('span.tag-filter').forEach(function(el){
+        el.classList.remove('active');
+      });
+      filter.classList.add('active');
 
-			if( $(this).hasClass('all'))
-				$('.project-item').showAll();
-			else
-				$('.project-item').filterTags( $(this).data('tag') );
-		});
-	});
+      document.querySelectorAll('.tag-group').forEach(function(group){
+        group.querySelectorAll('*').forEach(function(el){
+          if (el.dataset.tag === filterTag) {
+            el.classList.add('active');
+          }
+        });
+      });
 
-	$.fn.extend({
-	  filterTags: function(tagName) {
-	  	this.removeClass('not-show');
-	    return this.each(function() {
-	    	var itemTagArray = JSON.parse( $(this).attr('data-tags') );
-			if($.inArray(tagName, itemTagArray) === -1){
-				$(this).addClass('not-show');
-			}
-	    });
-	  },
-	  showAll: function(){
-	  	return this.each(function() {
-			if($(this).hasClass('not-show')){
-				$(this).removeClass('not-show');
-			}
-	    });
-	  }
-	});
-})(jQuery)
+      var items = document.querySelectorAll('.project-item');
+      if (filter.classList.contains('all')) {
+        items.forEach(function(item){
+          item.classList.remove('not-show');
+        });
+      } else {
+        items.forEach(function(item){
+          var itemTags = JSON.parse(item.getAttribute('data-tags') || '[]');
+          if (itemTags.indexOf(filterTag) === -1) {
+            item.classList.add('not-show');
+          } else {
+            item.classList.remove('not-show');
+          }
+        });
+      }
+    });
+  });
+})();
