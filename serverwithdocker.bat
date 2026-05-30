@@ -1,0 +1,1 @@
+docker run -p 8080:4000 -v %cd%:/site bretfisher/jekyll-serve

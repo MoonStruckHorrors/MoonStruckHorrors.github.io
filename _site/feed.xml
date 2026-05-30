@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nikhil's Blog - Latest Posts</title>
+    <description>Nikhil Vyas - Software Engineer, Software Developer</description>
+    <link>http://0.0.0.0:4000/</link>
+    <atom:link href="http://0.0.0.0:4000/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Wed, 17 Apr 2019 17:40:22 +0000</pubDate>
+    <lastBuildDate>Wed, 17 Apr 2019 17:40:22 +0000</lastBuildDate>
+    <generator>Jekyll v3.7.3</generator>
+    
+      <item>
+        <title>Coverity - Out-of-bounds Read (CWE-125) - Interesting oversight</title>
+        <description>&lt;p&gt;CWE-125: Out-of-bounds Read – &lt;a href=&quot;https://cwe.mitre.org/data/definitions/125.html&quot;&gt;https://cwe.mitre.org/data/definitions/125.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Error message:&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Out-of-bounds read (OVERRUN)
+5. overrun-local: Overrunning array someArray of 655 4-byte elements at element index 658 (byte offset 2632) using index idxForSomeArray (which evaluates to 658).
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The issue itself is pretty straightforward; trying to read an out-of-bounds / invalid index. Was pretty sure about this being a false positive initially.&lt;/p&gt;
+
+&lt;p&gt;The code looks something like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;someArray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* === A long list of array elements here === */&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* vvv newly added code vvv*/&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;a&quot;&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//wow that's a,
+&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&quot;b&quot;&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//orly b,
+&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&quot;c&quot;&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//definitely c,
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// We usually keep adding stuff to the array and updating the size here
+&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;someArraySize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This array is used like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;someArraySize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* Read using i - started causing SA Violation when reaching the newly added elements after adding new elements to the array */&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;For instance, in the above snippet, if we try to access &lt;code class=&quot;highlighter-rouge&quot;&gt;someArray[2]&lt;/code&gt; - it results in this warning during compilation.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;array index 2 is past the end of the array (which contains 1 element) [-Warray-bounds]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;But we have three elements, right? Wrong, we have just one element &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;abc&quot;&lt;/code&gt;, not three elements. Apparently, if we miss the commas in the curly bracket initialization syntax for char* arrays, C++ decides to concatenate the string literals. Have to find the proper documentation for this behavior, but that’s how it is.&lt;/p&gt;
+
+&lt;p&gt;This code works just fine:&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;someArray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* === A long list of array elements here === */&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* vvv newly added code vvv*/&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;a&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//wow that's a,
+&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&quot;b&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//orly b,
+&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&quot;c&quot;&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//definitely c,
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Minor but interesting issue. Good fun for around 15 minutes.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 17 Apr 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/c++/technology/2019/04/17/out-of-bounds-read-coverity.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/c++/technology/2019/04/17/out-of-bounds-read-coverity.html</guid>
+        
+        <category>c++</category>
+        
+        <category>cpp</category>
+        
+        <category>c</category>
+        
+        <category>static-analysis</category>
+        
+        <category>static</category>
+        
+        <category>analysis</category>
+        
+        <category>coverity</category>
+        
+        <category>synopsys</category>
+        
+        <category>code</category>
+        
+        <category>programming</category>
+        
+        <category>coding</category>
+        
+        <category>violation</category>
+        
+        
+        <category>c++</category>
+        
+        <category>technology</category>
+        
+      </item>
+    
+      <item>
+        <title>Docker API - Check if the image has been updated in Docker Registry (DockerHub / Private Registry)</title>
+        <description>&lt;p&gt;Easy way to check for base image updates for a running container. Works for DockerHub and Private DTR.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;DTR&lt;/code&gt; host - &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dockertrustedregistry/&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dockerd&lt;/code&gt; host - &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dockerdhost/&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;gettting-the-imageid-of-running-containers&quot;&gt;Gettting the ImageID of running containers&lt;/h3&gt;
+
+&lt;p&gt;First order of business is to get the Image name / Image ID. For this, send a GET request to the endpoint &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dockerdhost/containers/json&lt;/code&gt; to get a list of containers in JSON format. We’re looking for the keys &lt;code class=&quot;highlighter-rouge&quot;&gt;Image&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;ImageID&lt;/code&gt;. We’ll use these to query the registry API for updates.&lt;/p&gt;
+
+&lt;h3 id=&quot;getting-the-digest-of-these-images-from-the-registry&quot;&gt;Getting the digest of these Images from the registry&lt;/h3&gt;
+
+&lt;p&gt;Next, for these &lt;code class=&quot;highlighter-rouge&quot;&gt;Image&lt;/code&gt;s send a GET to the registy API. The only catch here is the requirement for a certain header, without which we won’t get the latest digest. This one:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'Accept':'application/vnd.docker.distribution.manifest.v2+json'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With this header, send a GET to &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dockertrustedregistry/v2/&amp;lt;Image_Name&amp;gt;/manifests/latest&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;Image_Name&amp;gt;&lt;/code&gt; here is just the name of the image WITHOUT the Registry prefix. For instance, if your image is &lt;code class=&quot;highlighter-rouge&quot;&gt;dockertrustedregistry/someimagename&lt;/code&gt;, just use &lt;code class=&quot;highlighter-rouge&quot;&gt;someimagename&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Handy function to do this (not fully tested):&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;short_image_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pos_slash&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pos_colon&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;:&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pos_slash&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pos_colon&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;pos_colon&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;image_name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pos_slash&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pos_colon&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In the JSON response, we’re looking for the value of &lt;code class=&quot;highlighter-rouge&quot;&gt;digest&lt;/code&gt; under &lt;code class=&quot;highlighter-rouge&quot;&gt;config&lt;/code&gt;. Something like &lt;code class=&quot;highlighter-rouge&quot;&gt;resp.json()[&quot;config&quot;][&quot;digest&quot;]&lt;/code&gt; (If you’re not getting this, recheck the header)&lt;/p&gt;
+
+&lt;p&gt;Compare this value with the &lt;code class=&quot;highlighter-rouge&quot;&gt;ImageID&lt;/code&gt;. If they’re different, the Image has been updated.&lt;/p&gt;
+
+&lt;p&gt;Fin&lt;/p&gt;
+</description>
+        <pubDate>Wed, 10 Apr 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/docker/others/2019/04/10/docker-api-check-image-update.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/docker/others/2019/04/10/docker-api-check-image-update.html</guid>
+        
+        <category>docker</category>
+        
+        <category>api</category>
+        
+        <category>rest</category>
+        
+        <category>registry</category>
+        
+        <category>dtr</category>
+        
+        <category>docker trusted registry</category>
+        
+        <category>container</category>
+        
+        <category>image</category>
+        
+        <category>docker cli</category>
+        
+        
+        <category>docker</category>
+        
+        <category>others</category>
+        
+      </item>
+    
+      <item>
+        <title>Maven - Bundle local JAR dependency within the target JAR</title>
+        <description>&lt;p&gt;Say you have two projects - &lt;code class=&quot;highlighter-rouge&quot;&gt;ProjectX&lt;/code&gt; - which depends on &lt;code class=&quot;highlighter-rouge&quot;&gt;ProjectY&lt;/code&gt; which is a local JAR. &lt;code class=&quot;highlighter-rouge&quot;&gt;ProjectY&lt;/code&gt; is added as a dependency to &lt;code class=&quot;highlighter-rouge&quot;&gt;ProjectX&lt;/code&gt; like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.wow.projecty&lt;span class=&quot;nt&quot;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;projecty&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0&lt;span class=&quot;nt&quot;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;system&lt;span class=&quot;nt&quot;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;systemPath&amp;gt;&lt;/span&gt;/Users/somepath/ProjectY.jar&lt;span class=&quot;nt&quot;&gt;&amp;lt;/systemPath&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now if you want a self-sufficient JAR with all the dependencies bundled, you’d probably use the &lt;code class=&quot;highlighter-rouge&quot;&gt;maven-assembly-plugin&lt;/code&gt; like this&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;maven-assembly-plugin&lt;span class=&quot;nt&quot;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;descriptorRefs&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;descriptorRef&amp;gt;&lt;/span&gt;jar-with-dependencies&lt;span class=&quot;nt&quot;&gt;&amp;lt;/descriptorRef&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/descriptorRefs&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;archive&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;manifest&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;nt&quot;&gt;&amp;lt;addClasspath&amp;gt;&lt;/span&gt;true&lt;span class=&quot;nt&quot;&gt;&amp;lt;/addClasspath&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;nt&quot;&gt;&amp;lt;mainClass&amp;gt;&lt;/span&gt;ProjectXDriver&lt;span class=&quot;nt&quot;&gt;&amp;lt;/mainClass&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;/manifest&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/archive&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;executions&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;execution&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;id&amp;gt;&lt;/span&gt;make-assembly&lt;span class=&quot;nt&quot;&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;phase&amp;gt;&lt;/span&gt;package&lt;span class=&quot;nt&quot;&gt;&amp;lt;/phase&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;goals&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;nt&quot;&gt;&amp;lt;goal&amp;gt;&lt;/span&gt;single&lt;span class=&quot;nt&quot;&gt;&amp;lt;/goal&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;nt&quot;&gt;&amp;lt;/goals&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;/execution&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/executions&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This would bundle all the dependencies, except the ones with a system scope - your local JARs.&lt;/p&gt;
+
+&lt;p&gt;To work around this issue, just install the JAR in the local maven repository and use it normally (without  system scope / systemPath).&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mvn install:install-file -Dfile=ProjectY.jar -DpomFile=../pom.xml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;em&gt;(Based on my unanswered question on StackOverflow)&lt;/em&gt; 😅&lt;/p&gt;
+</description>
+        <pubDate>Wed, 20 Mar 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/technology/others/2019/03/20/maven-bundle-local-dependency.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/technology/others/2019/03/20/maven-bundle-local-dependency.html</guid>
+        
+        <category>java</category>
+        
+        <category>maven</category>
+        
+        <category>dependency</category>
+        
+        <category>jar</category>
+        
+        <category>local</category>
+        
+        <category>system</category>
+        
+        <category>scope</category>
+        
+        
+        <category>technology</category>
+        
+        <category>others</category>
+        
+      </item>
+    
+      <item>
+        <title>[Short] GoPro Hero 7 - Battery Drain issue</title>
+        <description>&lt;h2 id=&quot;issue&quot;&gt;Issue:&lt;/h2&gt;
+
+&lt;p&gt;GoPro Hero 7’s battery drains overnight while it is switched off. (Brand new device, less than 3 days old)&lt;/p&gt;
+
+&lt;h2 id=&quot;fixes-i-found-on-the-internet&quot;&gt;Fixes I found on the Internet:&lt;/h2&gt;
+
+&lt;h3 id=&quot;rollback-firmware-updates&quot;&gt;Rollback firmware updates&lt;/h3&gt;
+&lt;p&gt;Since I updated the firmware the first time I booted up the device, this was the first thing I tried. Left it powered off for roughly 6 hours and the battery reached zero.&lt;/p&gt;
+
+&lt;h3 id=&quot;remove-the-memory-card-before-switching-off&quot;&gt;Remove the memory card before switching off&lt;/h3&gt;
+&lt;p&gt;This was a weird one, but since I wanted it fixed without going through the replacement / RMA procedure, I gave it a shot. After all, you never know what kind of coding brainfarts are embedded. Didn’t work.&lt;/p&gt;
+
+&lt;h1 id=&quot;fix-that-worked-for-me&quot;&gt;Fix that worked for me&lt;/h1&gt;
+&lt;p&gt;Turn off the Wireless connectivity. 
+From the pull down menu, go to &lt;code class=&quot;highlighter-rouge&quot;&gt;Preferences &amp;gt; Connections &amp;gt; Wireless Connections &amp;gt; Off&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;After leaving it powered off overnight and seeing no battery drain, decided to stress test it. Stress testing in this case means leaving it powered off for &lt;em&gt;days&lt;/em&gt;. Left it powered off for a week - minimal battery drain!&lt;/p&gt;
+</description>
+        <pubDate>Fri, 15 Mar 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/technology/others/2019/03/15/gopro-hero7-battery-drain.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/technology/others/2019/03/15/gopro-hero7-battery-drain.html</guid>
+        
+        <category>gopro</category>
+        
+        <category>hero7</category>
+        
+        <category>hero</category>
+        
+        <category>goprohero7</category>
+        
+        <category>battery</category>
+        
+        <category>drain</category>
+        
+        <category>charge</category>
+        
+        
+        <category>technology</category>
+        
+        <category>others</category>
+        
+      </item>
+    
+      <item>
+        <title>[Short] Dockerfile - COPY: no such file or directory</title>
+        <description>&lt;h2 id=&quot;issue&quot;&gt;Issue&lt;/h2&gt;
+&lt;p&gt;Getting the error &lt;code class=&quot;highlighter-rouge&quot;&gt;COPY: no such file or directory&lt;/code&gt; when you run a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; for a &lt;code class=&quot;highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt; with a &lt;code class=&quot;highlighter-rouge&quot;&gt;COPY&lt;/code&gt; command like this - &lt;code class=&quot;highlighter-rouge&quot;&gt;COPY /Users/nikhil/somefile.jar /somefolderonimage/&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;fix&quot;&gt;Fix&lt;/h2&gt;
+&lt;p&gt;Docker doesn’t know about any file except the ones in &lt;code class=&quot;highlighter-rouge&quot;&gt;$(pwd)&lt;/code&gt;. It just denies its existence because of some weird design decision. Copy the files to be bundled with the image into the current working directory(Where you’re running the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; from). And then use something like this - &lt;code class=&quot;highlighter-rouge&quot;&gt;COPY somefile.jar /somefolderonimage/&lt;/code&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 27 Feb 2019 11:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/technology/others/2019/02/27/dockerfile-copy-no-such-file-or-directory.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/technology/others/2019/02/27/dockerfile-copy-no-such-file-or-directory.html</guid>
+        
+        <category>docker</category>
+        
+        <category>Dockerfile</category>
+        
+        <category>COPY</category>
+        
+        <category>false</category>
+        
+        <category>such</category>
+        
+        <category>file</category>
+        
+        <category>or</category>
+        
+        <category>directory</category>
+        
+        
+        <category>technology</category>
+        
+        <category>others</category>
+        
+      </item>
+    
+      <item>
+        <title>IComparer issues with Array.Sort() in C# (Unity)</title>
+        <description>&lt;p&gt;Came across this seemingly weird issue while trying to sort an Array of &lt;code class=&quot;highlighter-rouge&quot;&gt;Vector2&lt;/code&gt;s based on their X coordinates.&lt;/p&gt;
+
+&lt;p&gt;Wrote a quick Class extending &lt;code class=&quot;highlighter-rouge&quot;&gt;IComparer&amp;lt;Vector3&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Vector2DXPosComparer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;IComparer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+     &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Compare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+         &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+             &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+         &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+             &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+         &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And then just tried an &lt;code class=&quot;highlighter-rouge&quot;&gt;Array.Sort()&lt;/code&gt; with this &lt;code class=&quot;highlighter-rouge&quot;&gt;IComparer&lt;/code&gt;. Something like this.&lt;/p&gt;
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Sort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vector2DXPosComparer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outStr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;++)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;outStr&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;ToString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Debug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outStr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The output was an unchanged, unsorted array - same as the original. Tried the exact thing with a regular C# project. Surprisingly it worked!
+So the problem was definitely specific to Unity’s &lt;code class=&quot;highlighter-rouge&quot;&gt;Array.Sort&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Based on an answer from Unity Answers - this happens because the equality is not handled in the code.&lt;/p&gt;
+
+&lt;p&gt;In my previous IComparer code, the equality is clubbed in the else block. Even after getting the answer, took me a while to realize why exactly this is an issue. (Hint: Quick Sort)&lt;/p&gt;
+
+&lt;p&gt;Fix? Add one &lt;code class=&quot;highlighter-rouge&quot;&gt;=&lt;/code&gt;. Or just use &lt;code class=&quot;highlighter-rouge&quot;&gt;CompareTo&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-c# highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Compare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vector3&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//OR just return v1.x.CompareTo(v2.x)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Time spent debugging: One Day. SMH.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 19 Nov 2018 13:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/c%23/unity/2018/11/19/csharp-IComparer-sort-issues.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/c%23/unity/2018/11/19/csharp-IComparer-sort-issues.html</guid>
+        
+        <category>C#</category>
+        
+        <category>Unity</category>
+        
+        <category>Scripting</category>
+        
+        <category>IComparer</category>
+        
+        <category>Vector</category>
+        
+        <category>Vector2</category>
+        
+        <category>Vector3</category>
+        
+        
+        <category>C#</category>
+        
+        <category>Unity</category>
+        
+      </item>
+    
+      <item>
+        <title>Audio out of sync - Windows 10</title>
+        <description>&lt;p&gt;I’ve been living with this issue for more than an year now (probably more). In streaming videos (YouTube, Netflix, etc) the audio would progressively become out of sync with the video. With some quick observations I determined that it takes roughly 5-7 minutes for the video to lag 1s behind the audio. So that’s&lt;/p&gt;
+
+&lt;p&gt;I usually boot up Windows just for games so this isn’t really that big of a deal. However, it is &lt;em&gt;really&lt;/em&gt; annoying!&lt;/p&gt;
+
+&lt;p&gt;My standard response cycle for this issue is this:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Encounter the issue.&lt;/li&gt;
+  &lt;li&gt;Google&lt;/li&gt;
+  &lt;li&gt;Try the first non-visited solution.&lt;/li&gt;
+  &lt;li&gt;Try to watch a lengthy video.&lt;/li&gt;
+  &lt;li&gt;Issue persists.&lt;/li&gt;
+  &lt;li&gt;Restart and boot into Linux.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Now, most of the times the first solutions were related to Realtek audio settings. Some were about the infamous Windows Power saving configuration. Heck, there was one about “Try using a wired headphone”. &lt;a href=&quot;https://helgeklein.com/blog/2017/03/streamed-video-audio-sync-problems-windows-10-realtek-sound/&quot;&gt;Stuff like this&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Trying a solution which doesn’t work only adds to the frustration when you realize that after 10 minutes into a video. Well, maybe these are variations of the issue - but I surely wasn’t facing these.&lt;/p&gt;
+
+&lt;p&gt;Now, what could possibly cause the video to lag behind the audio? It’s obviously not the GPU - which is capable of pushing 144 frames at 1080p? What about the the overlay stuff?&lt;/p&gt;
+
+&lt;p&gt;MSI Afterburner! Or more specifically, RivaTuner Statistics Server that comes along with it. Provides the OSD which I use for in-game FPS, GPU/CPU Temperature monitoring.&lt;/p&gt;
+
+&lt;p&gt;Disabled the OSD and killed RTSS and it worked just fine! Removed MSI Afterburner completely for good measure.&lt;/p&gt;
+
+&lt;p&gt;For now, I’ll make do with Zotac FireStorm for my OC/Fan control needs and Steam overlay for a minimal in-game FPS counter - Until MSI gets their shit together. ¯\&lt;em&gt;(ツ)&lt;/em&gt;/¯&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;tl;dr&lt;/strong&gt;: audio/video don’t go hand in hand? kill MSI Afterburner.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 27 Sep 2018 17:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/technology/misc/2018/09/27/windows-10-audio-out-of-sync.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/technology/misc/2018/09/27/windows-10-audio-out-of-sync.html</guid>
+        
+        <category>Windows10</category>
+        
+        <category>Windows</category>
+        
+        <category>Microsoft</category>
+        
+        <category>Audio</category>
+        
+        <category>Video</category>
+        
+        <category>Web</category>
+        
+        <category>Sync</category>
+        
+        <category>Lag</category>
+        
+        <category>MSIAfterburner</category>
+        
+        <category>MSI</category>
+        
+        <category>AfterBurner</category>
+        
+        
+        <category>technology</category>
+        
+        <category>misc</category>
+        
+      </item>
+    
+      <item>
+        <title>[fanFiction] One less Volatile - The story of Sabit</title>
+        <description>&lt;p&gt;“It Burns!” screamed &lt;a href=&quot;http://dyinglight.wikia.com/wiki/Sabit&quot;&gt;Sabit&lt;/a&gt;. He had been in the sun since 11 in the morning - almost two hours. The cave was partially lit, most of the light coming from the narrow opening on the top. Rest from the underwater algae which grew in the far corners of the cave. At night, it would look brilliant, almost magical if not for piles of human flesh and bones his new cavemates kept bringing.&lt;/p&gt;
+
+&lt;p&gt;Although, it was starting to grow on him. The stench which made him nauseous when he first saw the sticky piles of stale human meat - was starting to make him hungry now. Same with the sunlight - not too long ago he would’ve given anything for a bit of sunlight. Although he had no issues at all venturing out alone in the night as well. Now the sunlight just burned his skin, emitting orange fumes. He still remembered this was caused due to the UV radiation or &lt;em&gt;something&lt;/em&gt; - he wasn’t a scientist.&lt;/p&gt;
+
+&lt;p&gt;He was, however, a botanist. Well, atleast since the outbreak. See, in times when even surviving is a big achievement - anyone who can distinguish a Toxic Lichen from generic herbs is considered a renowned botanist / herbalist. On top of that, he was the only person around who had the knack for tracking the vital yellowroot herb. Before the outbreak, you could’ve done a reverse image search to find the actual name, appearance and properties of this particular plant. But now, if it’s yellow and matches the shape - it’s good enough for everyone.&lt;/p&gt;
+
+&lt;p&gt;As with most of his memories, he was beginning to forget the appearance of the herbs as well. He did remember Jasir and the folks on his farm; and how overjoyed they became when he went to deliver the herbs every week. Or how they asked him to stay with them, on the farm. But he wanted to be close to The Sanctuary down south, in proximity of The Children of the Sun. Even if that meant staying in a makeshift hut.&lt;/p&gt;
+
+&lt;p&gt;From the first look, that hut would look like a deathwish to any outsider. Back on the farm they have barbed wire all over the perimeter and bright UV lamps that are visible from almost half a mile. The poor hut didn’t even have a basic trap to stop the biters. But Sabit wasn’t really that naive. He chose the location for a reason - height and terrain. It was really a decent sized hillock in middle of a river with steep cliffs - unsurmountable without proper climbing equipment - even by the fast climbing &lt;a href=&quot;http://dyinglight.wikia.com/wiki/Viral&quot;&gt;Virals&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;When he first saw the spot, it seemed too perfect. A steep climb with fertile land on top, in middle of a river during zombie apocalypse? Even residents of the Towers would envy this location. And perfect it was. Well except for the fact that the hill was .. hollow.&lt;/p&gt;
+
+&lt;p&gt;It was a late realization for Sabit. It took almost 6 months for him to finally realise that ground below the hut had collapsed - opening up the entrance to the newly revealed cave network that spanned across majority of the hillock; And another few days for that fatal misstep which led him to his current.. state.&lt;/p&gt;
+
+&lt;p&gt;His skin had faded away, giving way to the exposed flesh and bones. He knew he was going to be stuck in the red gooey, fleshy mess until his body inevitably took its new form. He knew what was coming. And he wanted no part in the madness which had taken over the city. He saw what these things, which he was going to become - &lt;a href=&quot;http://dyinglight.wikia.com/wiki/Volatile&quot;&gt;Volaties&lt;/a&gt; - were capable of. The cure, the immunity - all a fantasy.&lt;/p&gt;
+
+&lt;p&gt;“End this!” he screamed again. He would’ve thanked Kyle - for taking the yellow herbs for the farm - if speaking more than two words was feasible. And a visibly distraught and sad Kyle did it. One less Volatile.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 26 Sep 2018 17:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/gaming/misc/2018/09/26/the-story-of-sabit.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/gaming/misc/2018/09/26/the-story-of-sabit.html</guid>
+        
+        <category>dyinglight</category>
+        
+        <category>thefollowing</category>
+        
+        <category>sabit</category>
+        
+        
+        <category>gaming</category>
+        
+        <category>misc</category>
+        
+      </item>
+    
+      <item>
+        <title>Fix for jumbled / incorrect / glitchy E-mail HTML in Python</title>
+        <description>&lt;p&gt;So I have this script I wrote at work which sends out E-mails for some internal defect stats.&lt;/p&gt;
+
+&lt;h1 id=&quot;the-issue&quot;&gt;The Issue&lt;/h1&gt;
+
+&lt;p&gt;For a long time, every few days the HTML would sporadically be jumbled up - strings jumping from once place to another.&lt;/p&gt;
+
+&lt;p&gt;Most of the times it would be a missing &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;td&amp;gt;&lt;/code&gt; in a &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;tr&amp;gt;&lt;/code&gt; - which would surprisingly reappear somewhere before the table.&lt;/p&gt;
+
+&lt;p&gt;The E-mail part of the script was something like this.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Create the MIMEMultipart()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MIMEMultipart&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'From'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;from_&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'To'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;to_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Subject'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subject&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Cc'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;, &quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cc_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Add some text to it&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MIMEText&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;txt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'html'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'us-ascii'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;attach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# == Attach files ==&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# == Attach images ==&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Create a SMTP object and send the MIMEMultipart over it&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;connection&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SMTP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;someserver.domain.com&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;connection&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;email&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;It looks something like this in action.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/GfcUDFw.png&quot; alt=&quot;issue&quot; /&gt;
+(That A belongs to the fourth column. Yes, it’s pixelated. That’s why I added an arrow)&lt;/p&gt;
+
+&lt;h1 id=&quot;investigation&quot;&gt;Investigation&lt;/h1&gt;
+
+&lt;p&gt;At first, I thought there was something wrong with my HTML generating logic. Since the issue happened randomly, I persisted the HTML which was being sent out. When it finally happened again, I looked at the HTML and it was proper.
+But atleast I had the HTML which would consistently reproduce this behavior.&lt;/p&gt;
+
+&lt;p&gt;Googled a lot with no luck. Tried a lot of permutations: &lt;code class=&quot;highlighter-rouge&quot;&gt;python smtp html issue/bug&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;python mime html formatting issue/bug&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;python mimemultipart mimetext issue/bug&lt;/code&gt;. And many, many more. 😅&lt;/p&gt;
+
+&lt;h1 id=&quot;the-fix&quot;&gt;The Fix&lt;/h1&gt;
+
+&lt;p&gt;Newlines! I realized my HTML lacked &lt;code class=&quot;highlighter-rouge&quot;&gt;\n&lt;/code&gt;s. It was rendering properly in a browser, but in the E-mail client (tried with Outlook on Mac/Windows) it would come jumbled up.&lt;/p&gt;
+
+&lt;p&gt;Just adding line breaks to the HTML seems to fix this issue. I’m not really sure why would this happen, but if anyone knows - let me know. 🙂&lt;/p&gt;
+</description>
+        <pubDate>Mon, 24 Sep 2018 13:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/python/2018/09/24/python-email-html-jumbled.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/python/2018/09/24/python-email-html-jumbled.html</guid>
+        
+        <category>python</category>
+        
+        <category>mime</category>
+        
+        <category>programming</category>
+        
+        <category>coding</category>
+        
+        <category>email</category>
+        
+        <category>mail</category>
+        
+        <category>html</category>
+        
+        <category>table</category>
+        
+        
+        <category>python</category>
+        
+      </item>
+    
+      <item>
+        <title>Skipping unwanted responses in pexpect</title>
+        <description>&lt;p&gt;Was recently automating some Server CLI stuff and came across this weird issue. Where I was getting blanks whenever I tried to get some response back from the Terminal session.&lt;/p&gt;
+
+&lt;p&gt;Spent a day figuring out why I was getting blank responses.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# process: pexpect spawn object&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# prompt: terminal prompt; eg: '&amp;gt;', '~'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'set SOME_VAR=1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# We don't need the empty response of this command&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'echo cake'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Returns a response, but we don't need it; sorry cake&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ls'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Say we need the response of this one&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pexpect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TIMEOUT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pexpect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;EOF&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Searches the first occurance of prompt&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;resp_b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;before&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# This would return the response upto the first prompt, not the ls response&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This is because of the way pexpect works with the terminal response buffer. To get around this, you should match every &lt;code class=&quot;highlighter-rouge&quot;&gt;sendline&lt;/code&gt; with a call to &lt;code class=&quot;highlighter-rouge&quot;&gt;expect&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Or, we can do it in a single line. Since expect works with regex, we can simple jump to the end of the terminal response so far.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Use something other than fstring if you're not on Python 3.6&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'{prompt}$'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Searches the last occurance of prompt (Prompt followed by end of string)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# OR&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'{prompt} $'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# The prompts usually have a trailing space&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Wrapped up in a neat function.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_and_clear_full_response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# Search for prompt[SPACE][END_OF_STRING]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'{0} $'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pexpect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TIMEOUT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pexpect&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;EOF&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;# Return the full response buffer since the last expect&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;before&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Fixed code:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'set SOME_VAR=1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# We don't need the empty response of this command&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'echo cake'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Returns a response, but we don't need it; sorry cake&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_and_clear_full_response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Let's clear everything&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ls'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Say we need the response of this one&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prompt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;resp_b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;process&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;before&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# This would return the output of ls&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Simple, eh? Could become annoying if you start suspecting the server / CLI for not displaying a response.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 19 Sep 2018 13:00:00 +0000</pubDate>
+        <link>http://0.0.0.0:4000/python/2018/09/19/skipping-unwanted-responses-in-pexpect.html</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/python/2018/09/19/skipping-unwanted-responses-in-pexpect.html</guid>
+        
+        <category>python</category>
+        
+        <category>pexpect</category>
+        
+        <category>expect</category>
+        
+        <category>automation</category>
+        
+        <category>CLI</category>
+        
+        
+        <category>python</category>
+        
+      </item>
+    
+  </channel>
+</rss>

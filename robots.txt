@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://moonstruckhorrors.github.io/sitemap.xml
